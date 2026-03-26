@@ -2,19 +2,13 @@ import 'dotenv/config';
 import cors from 'cors';
 import express from 'express';
 import os from 'node:os';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 
 const app = express();
 const port = Number(process.env.API_PORT || 8787);
-const upstreamBaseUrl = process.env.MLX_VLM_BASE_URL || 'http://127.0.0.1:8081';
-const defaultModel = process.env.MLX_MODEL_ID || 'mlx-community/Qwen3.5-0.8B-MLX-8bit';
-const maxTokens = Number(process.env.MLX_MAX_TOKENS || 180);
-const warmupTimeoutMs = Number(process.env.MLX_WARMUP_TIMEOUT_MS || 900000);
-const warmupImageDataUrl =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO9d7ysAAAAASUVORK5CYII=';
-const execFileAsync = promisify(execFile);
-
+const upstreamBaseUrl = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434';
+const defaultModel = process.env.OLLAMA_MODEL || 'qwen2.5vl:3b';
+const maxTokens = Number(process.env.MAX_TOKENS || 180);
+const warmupTimeoutMs = Number(process.env.WARMUP_TIMEOUT_MS || 900000);
 let readyState = 'unknown';
 let readyDetail = 'Waiting for warm-up.';
 let warmupPromise = null;
@@ -84,22 +78,11 @@ function buildWarmupMessages() {
   return [
     {
       role: 'system',
-      content: 'Warm up the model and reply briefly.',
+      content: 'You are a helpful assistant.',
     },
     {
       role: 'user',
-      content: [
-        {
-          type: 'text',
-          text: 'Reply with the single word ready.',
-        },
-        {
-          type: 'image_url',
-          image_url: {
-            url: warmupImageDataUrl,
-          },
-        },
-      ],
+      content: 'Reply with the single word: ready.',
     },
   ];
 }
@@ -111,25 +94,10 @@ function formatMemoryLabel(totalMemoryBytes) {
 }
 
 async function detectSystemInfo() {
-  const totalMemoryBytes = os.totalmem();
-  const isAppleSilicon = process.platform === 'darwin' && process.arch === 'arm64';
-  let chip = null;
-
-  if (isAppleSilicon) {
-    try {
-      const { stdout } = await execFileAsync('sysctl', ['-n', 'machdep.cpu.brand_string']);
-      chip = stdout.trim() || 'Apple Silicon';
-    } catch {
-      chip = 'Apple Silicon';
-    }
-  }
-
   return {
-    chip,
-    memory: formatMemoryLabel(totalMemoryBytes),
+    memory: formatMemoryLabel(os.totalmem()),
     platform: process.platform,
     arch: process.arch,
-    isAppleSilicon,
   };
 }
 
@@ -142,13 +110,21 @@ function getSystemInfo() {
 }
 
 async function fetchUpstreamHealth() {
-  const upstream = await fetch(`${upstreamBaseUrl}/health`);
-  const payload = upstream.ok ? await upstream.json() : null;
+  const healthRes = await fetch(`${upstreamBaseUrl}/health`);
 
-  return {
-    ok: upstream.ok,
-    payload,
-  };
+  if (healthRes.ok) {
+    const payload = await healthRes.json().catch(() => null);
+    return { ok: true, payload };
+  }
+
+  // Some backends (e.g. Ollama) do not expose /health.
+  // A 404 means the server is reachable; confirm via /v1/models.
+  if (healthRes.status === 404) {
+    const modelsRes = await fetch(`${upstreamBaseUrl}/v1/models`);
+    return { ok: modelsRes.ok, payload: null };
+  }
+
+  return { ok: false, payload: null };
 }
 
 async function warmupModel() {
@@ -212,7 +188,7 @@ app.get('/api/health', async (_req, res) => {
 
     if (!ok) {
       readyState = 'offline';
-      readyDetail = 'MLX server is not responding.';
+      readyDetail = 'Vision server is not responding.';
       return res.status(503).json({
         upstream: 'offline',
         ready: false,
@@ -304,7 +280,7 @@ app.post('/api/describe/stream', async (req, res) => {
     });
   } catch (error) {
     writeSse(res, 'error', {
-      message: `Unable to reach mlx_vlm.server at ${upstreamBaseUrl}. ${error.message}`,
+      message: `Unable to reach vision server at ${upstreamBaseUrl}. ${error.message}`,
     });
     return res.end();
   }

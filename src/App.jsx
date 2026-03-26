@@ -5,11 +5,10 @@ const SYSTEM_PROMPT =
 
 const INITIAL_STATUS = {
   state: 'checking',
-  detail: 'Checking MLX VLM bridge',
+  detail: 'Checking vision bridge',
 };
 
 const INITIAL_SYSTEM_INFO = {
-  chip: '',
   memory: '',
 };
 
@@ -207,7 +206,6 @@ export default function App() {
 
         if (!cancelled && response.ok) {
           setSystemInfo({
-            chip: payload.chip || '',
             memory: payload.memory || '',
           });
         }
@@ -246,8 +244,8 @@ export default function App() {
               nextState === 'online'
                 ? payload.detail || `Bridge ready: ${payload.model}`
                 : nextState === 'warming'
-                  ? payload.detail || 'Warming MLX model'
-                  : 'Start API and MLX server',
+                  ? payload.detail || 'Warming model'
+                  : 'Start API and Ollama server',
           });
 
           if (nextState !== 'online') {
@@ -258,7 +256,7 @@ export default function App() {
         if (!cancelled) {
           setStatus({
             state: 'offline',
-            detail: 'Start API and MLX server',
+                  detail: 'Start API and Ollama server',
           });
           timeoutId = window.setTimeout(checkHealth, 3000);
         }
@@ -430,7 +428,7 @@ export default function App() {
           text: liveText,
         }
       : null;
-  const systemInfoLabel = [systemInfo.chip, systemInfo.memory].filter(Boolean).join(' • ');
+  const systemInfoLabel = systemInfo.memory || '';
   const showUnavailableState = status.state === 'offline';
   const modelStatusLabel =
     status.state === 'online'
@@ -453,7 +451,7 @@ export default function App() {
         <header className="flex flex-col gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-panel backdrop-blur-2xl lg:flex-row lg:items-end lg:justify-between">
           <div className="w-full text-center">
             <h1 className="font-display text-3xl leading-tight text-white">
-              Qwen3.5 0.8B MLX Video Captioning Demo
+              Local LLM Video Captioning Demo
             </h1>
             {!showUnavailableState ? (
               <div className="mt-4 flex flex-col items-center gap-3">
@@ -489,8 +487,7 @@ export default function App() {
                     Startup Commands
                   </div>
                   <pre className="overflow-x-auto px-4 py-4 font-mono text-sm leading-7 text-mist/82">
-{`./scripts/start-mlx-server.sh
-npm run api`}
+{`.\\scripts\\start-ollama-server.ps1\nnpm run api`}
                   </pre>
                 </div>
               </div>
@@ -535,7 +532,7 @@ npm run api`}
                           setErrorMessage(
                             status.state === 'warming'
                               ? 'Model is still warming up. Wait until the bridge is ready.'
-                              : 'Start API and MLX server first.',
+                              : 'Start API and Ollama server first.',
                           );
                           return;
                         }
@@ -551,7 +548,7 @@ npm run api`}
                       <div className="max-w-md text-center">
                         <h3 className="font-display text-3xl text-white">Choose a video file.</h3>
                         <p className="mt-3 text-sm leading-7 text-mist/65">
-                          The app captures frames from your local video and streams them to the local MLX backend.
+                          The app captures frames from your local video and streams them to the local Ollama backend.
                         </p>
                       </div>
                     </div>
