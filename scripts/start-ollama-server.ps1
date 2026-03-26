@@ -11,15 +11,13 @@ $ErrorActionPreference = 'Stop'
 $rootDir    = Split-Path -Parent $PSScriptRoot
 $envFile    = Join-Path $rootDir '.env'
 
-# Load .env (only sets variables that are not already in the environment).
+# Load .env — values here always override inherited environment variables.
 if (Test-Path $envFile) {
     Get-Content $envFile | ForEach-Object {
         if ($_ -match '^\s*([^#=\s][^=]*?)\s*=\s*(.*?)\s*$') {
             $name  = $Matches[1]
             $value = $Matches[2] -replace '^["'']|["'']$'
-            if (-not [System.Environment]::GetEnvironmentVariable($name, 'Process')) {
-                [System.Environment]::SetEnvironmentVariable($name, $value, 'Process')
-            }
+            [System.Environment]::SetEnvironmentVariable($name, $value, 'Process')
         }
     }
 }

@@ -1,6 +1,6 @@
 # Local LLM Video Captioning Demo
 
-![Preview](./preview.jpg)
+![Preview](./preview.png)
 
 This project is a local demo for frame-by-frame video captioning with:
 
