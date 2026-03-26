@@ -25,7 +25,7 @@ if (Test-Path $envFile) {
 }
 
 $baseUrl              = if ($env:OLLAMA_BASE_URL)         { $env:OLLAMA_BASE_URL }         else { 'http://127.0.0.1:11434' }
-$modelId              = if ($env:OLLAMA_MODEL)            { $env:OLLAMA_MODEL }            else { 'qwen2.5vl:3b' }
+$modelId              = if ($env:OLLAMA_MODEL)            { $env:OLLAMA_MODEL }            else { 'qwen3.5:0.8b' }
 $warmupTimeoutSeconds = if ($env:WARMUP_TIMEOUT_SECONDS)  { [int]$env:WARMUP_TIMEOUT_SECONDS } else { 900 }
 $warmupMaxTokens      = if ($env:WARMUP_MAX_TOKENS)       { [int]$env:WARMUP_MAX_TOKENS }      else { 12 }
 

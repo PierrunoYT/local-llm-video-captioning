@@ -29,7 +29,7 @@ Defaults:
 
 - `API_PORT=8787`
 - `OLLAMA_BASE_URL=http://127.0.0.1:11434`
-- `OLLAMA_MODEL=qwen2.5vl:3b`
+- `OLLAMA_MODEL=qwen3.5:0.8b`
 - `MAX_TOKENS=180`
 
 ## 3. Start the Ollama backend
@@ -40,7 +40,7 @@ Defaults:
 
 This script starts `ollama serve`, pulls the model if it is not already present locally, and sends a warm-up request so the first video frame is not delayed.
 
-To use a different model, set `OLLAMA_MODEL` in `.env` to any Ollama vision model (e.g. `llava:7b`, `qwen2.5vl:7b`).
+To use a different model, set `OLLAMA_MODEL` in `.env` to any Ollama vision model (e.g. `qwen3.5:2b`, `qwen2.5vl:7b`).
 
 ## 4. Start the app
 

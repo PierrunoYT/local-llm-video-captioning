@@ -6,7 +6,7 @@ import os from 'node:os';
 const app = express();
 const port = Number(process.env.API_PORT || 8787);
 const upstreamBaseUrl = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434';
-const defaultModel = process.env.OLLAMA_MODEL || 'qwen2.5vl:3b';
+const defaultModel = process.env.OLLAMA_MODEL || 'qwen3.5:0.8b';
 const maxTokens = Number(process.env.MAX_TOKENS || 180);
 const warmupTimeoutMs = Number(process.env.WARMUP_TIMEOUT_MS || 900000);
 let readyState = 'unknown';
